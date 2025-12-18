@@ -193,7 +193,7 @@ const Portfolio: React.FC = () => {
                       border: '1px solid rgba(71, 85, 105, 0.5)',
                       borderRadius: '12px',
                     }}
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value) => value !== undefined ? formatCurrency(Number(value)) : ''}
                   />
                 </PieChart>
               </ResponsiveContainer>

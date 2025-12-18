@@ -240,7 +240,7 @@ const Analytics: React.FC = () => {
                   border: '1px solid rgba(71, 85, 105, 0.5)',
                   borderRadius: '12px',
                 }}
-                formatter={(value: number) => [formatNumber(value * 1e6), 'TVL']}
+                formatter={(value) => value !== undefined ? [formatNumber(Number(value) * 1e6), 'TVL'] : ['', 'TVL']}
               />
               <Area
                 type="monotone"
@@ -297,7 +297,7 @@ const Analytics: React.FC = () => {
                   border: '1px solid rgba(71, 85, 105, 0.5)',
                   borderRadius: '12px',
                 }}
-                formatter={(value: number) => [`${value.toFixed(2)}%`, 'APY']}
+                formatter={(value) => value !== undefined ? [`${Number(value).toFixed(2)}%`, 'APY'] : ['', 'APY']}
               />
               <Line
                 type="monotone"
@@ -347,7 +347,7 @@ const Analytics: React.FC = () => {
                     border: '1px solid rgba(71, 85, 105, 0.5)',
                     borderRadius: '12px',
                   }}
-                  formatter={(value: number) => formatNumber(value)}
+                  formatter={(value) => value !== undefined ? formatNumber(Number(value)) : ''}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -411,7 +411,7 @@ const Analytics: React.FC = () => {
                   border: '1px solid rgba(71, 85, 105, 0.5)',
                   borderRadius: '12px',
                 }}
-                formatter={(value: number) => [`${value.toFixed(2)}%`, 'APY']}
+                formatter={(value) => value !== undefined ? [`${Number(value).toFixed(2)}%`, 'APY'] : ['', 'APY']}
               />
               <Bar dataKey="apy" radius={[0, 4, 4, 0]}>
                 {protocolApyData.map((entry, index) => (
@@ -517,7 +517,7 @@ const Analytics: React.FC = () => {
                 border: '1px solid rgba(71, 85, 105, 0.5)',
                 borderRadius: '12px',
               }}
-              formatter={(value: number) => [value.toLocaleString(), 'Users']}
+              formatter={(value) => value !== undefined ? [Number(value).toLocaleString(), 'Users'] : ['', 'Users']}
             />
             <Area
               type="monotone"
