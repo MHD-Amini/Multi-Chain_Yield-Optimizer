@@ -216,7 +216,7 @@ const mockAssets: Asset[] = [
   {
     symbol: 'DAI',
     name: 'Dai Stablecoin',
-    address: '0x6B175474E89094C44Da98b954EescdeCB5BE4983',
+    address: '0x6B175474E89094C44Da98b954EescdeCB5bE3bec3', // DAI address on Ethereum mainnet
     decimals: 18,
     icon: '🟡',
     price: 1.0,

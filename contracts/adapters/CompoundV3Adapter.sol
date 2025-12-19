@@ -44,8 +44,8 @@ contract CompoundV3Adapter is IYieldProtocol, Ownable, ReentrancyGuard {
         baseToken = comet.baseToken();
         chainId = _chainId;
         
-        // Approve Comet to spend base token
-        IERC20(baseToken).approve(_comet, type(uint256).max);
+        // Approve Comet to spend base token (use forceApprove for compatibility with USDT-like tokens)
+        IERC20(baseToken).forceApprove(_comet, type(uint256).max);
     }
 
     /**
@@ -82,7 +82,11 @@ contract CompoundV3Adapter is IYieldProtocol, Ownable, ReentrancyGuard {
         
         // Calculate shares
         uint256 totalBalance = comet.balanceOf(address(this));
-        if (totalShares == 0 || totalBalance == 0) {
+        if (totalShares == 0) {
+            shares = amount;
+        } else if (totalBalance == 0) {
+            // Edge case: shares exist but balance is 0 (shouldn't happen normally)
+            // Reset shares to avoid division by zero
             shares = amount;
         } else {
             shares = (amount * totalShares) / totalBalance;
@@ -171,18 +175,20 @@ contract CompoundV3Adapter is IYieldProtocol, Ownable, ReentrancyGuard {
      * @param to The recipient address
      */
     function emergencyWithdraw(address token, address to) external onlyOwner {
+        address tokenToWithdraw = token;
+        
         if (token == address(comet)) {
             // Withdraw everything from Compound first
-            uint256 balance = comet.balanceOf(address(this));
-            if (balance > 0) {
-                comet.withdraw(baseToken, balance);
+            uint256 cometBalance = comet.balanceOf(address(this));
+            if (cometBalance > 0) {
+                comet.withdraw(baseToken, cometBalance);
             }
-            token = baseToken;
+            tokenToWithdraw = baseToken;
         }
         
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        if (balance > 0) {
-            IERC20(token).safeTransfer(to, balance);
+        uint256 tokenBalance = IERC20(tokenToWithdraw).balanceOf(address(this));
+        if (tokenBalance > 0) {
+            IERC20(tokenToWithdraw).safeTransfer(to, tokenBalance);
         }
     }
 }

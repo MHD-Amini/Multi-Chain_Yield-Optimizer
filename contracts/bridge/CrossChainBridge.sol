@@ -305,10 +305,11 @@ contract CrossChainBridge is Ownable, ReentrancyGuard, ILayerZeroReceiver {
     }
 
     /**
-     * @notice Get next nonce for a sender
+     * @notice Get next nonce for a sender (not used in LayerZero V2 OApp pattern)
+     * @dev Returns 0 as this implementation uses ordered delivery
      */
-    function nextNonce(uint32 /*_srcEid*/, bytes32 /*_sender*/) external view override returns (uint64) {
-        return 0; // Not used in this implementation
+    function nextNonce(uint32 /*_srcEid*/, bytes32 /*_sender*/) external pure override returns (uint64) {
+        return 0; // LayerZero V2 OApp uses ordered delivery, nonce tracked by endpoint
     }
 
     // ============ View Functions ============
@@ -400,20 +401,22 @@ contract CrossChainBridge is Ownable, ReentrancyGuard, ILayerZeroReceiver {
         (bytes32 recipient, bytes32 requestId) = abi.decode(message.data, (bytes32, bytes32));
         
         address recipientAddr = address(uint160(uint256(recipient)));
+        require(recipientAddr != address(0), "Invalid recipient");
         
         // Transfer tokens to recipient
         // Note: In production, you'd use wrapped tokens or a mint mechanism
-        if (IERC20(message.asset).balanceOf(address(this)) >= message.amount) {
-            IERC20(message.asset).safeTransfer(recipientAddr, message.amount);
-            emit BridgeCompleted(requestId, recipientAddr, message.amount);
-        }
+        uint256 balance = IERC20(message.asset).balanceOf(address(this));
+        require(balance >= message.amount, "Insufficient bridge liquidity");
+        
+        IERC20(message.asset).safeTransfer(recipientAddr, message.amount);
+        emit BridgeCompleted(requestId, recipientAddr, message.amount);
     }
 
     /**
      * @notice Process rebalance request
      * @param message The decoded message
      */
-    function _processRebalance(CrossChainMessage memory message) internal {
+    function _processRebalance(CrossChainMessage memory message) internal view {
         bytes32 targetProtocol = abi.decode(message.data, (bytes32));
         
         // In production, call the yield aggregator to execute rebalance
@@ -422,6 +425,10 @@ contract CrossChainBridge is Ownable, ReentrancyGuard, ILayerZeroReceiver {
             // Trigger rebalance logic
             // YieldAggregator(yieldAggregator).executeRebalance(message.asset, message.amount, targetProtocol);
         }
+        
+        // Silence unused variable warnings (these would be used in production implementation)
+        targetProtocol;
+        message;
     }
 
     /**
@@ -434,6 +441,10 @@ contract CrossChainBridge is Ownable, ReentrancyGuard, ILayerZeroReceiver {
         
         // In production, store this data for cross-chain yield comparison
         // This enables finding the best yield across all chains
+        
+        // Silence unused variable warnings (these would be used in production to store yield data)
+        apy;
+        totalDeposited;
         
         // Emit event for off-chain indexing
         emit CrossChainMessageReceived(srcChainId, bytes32(0), MSG_YIELD_REPORT, message.data);

@@ -134,7 +134,7 @@ export function handleBridgeInitiated(event: BridgeInitiated): void {
   request.amount = event.params.amount;
   request.sourceChainId = BigInt.fromI32(1); // Assumes mainnet source
   request.destinationChainId = BigInt.fromI32(event.params.dstChainId);
-  request.recipient = Bytes.fromI32(0); // Would be decoded from event
+  request.recipient = new Bytes(32); // Placeholder - would be decoded from event data in production
   request.timestamp = event.block.timestamp;
   request.completed = false;
   request.transactionHash = event.transaction.hash;

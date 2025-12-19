@@ -235,9 +235,14 @@ export function handleWithdrawn(event: Withdrawn): void {
   
   // Find protocol from user position
   let position = UserPosition.load(user.id + "-" + asset.id);
-  let protocolId = position != null && position.currentProtocol != null 
-    ? position.currentProtocol!
-    : "unknown";
+  let protocolId: string;
+  if (position != null && position.currentProtocol != null) {
+    protocolId = position.currentProtocol!;
+  } else {
+    // Create a placeholder protocol ID for unknown withdrawals
+    protocolId = "0x0000000000000000000000000000000000000000000000000000000000000000";
+    log.warning("Withdrawal from unknown protocol for user {} asset {}", [user.id, asset.id]);
+  }
   
   // Create withdrawal record
   let withdrawalId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();

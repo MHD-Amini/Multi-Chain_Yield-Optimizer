@@ -54,8 +54,8 @@ contract AaveV3Adapter is IYieldProtocol, Ownable, ReentrancyGuard {
         supportedAssets[asset] = true;
         aTokens[asset] = aToken;
         
-        // Approve Aave pool to spend assets
-        IERC20(asset).approve(address(aavePool), type(uint256).max);
+        // Approve Aave pool to spend assets (use forceApprove for compatibility with USDT-like tokens)
+        IERC20(asset).forceApprove(address(aavePool), type(uint256).max);
         
         emit AssetAdded(asset, aToken);
     }
@@ -81,7 +81,13 @@ contract AaveV3Adapter is IYieldProtocol, Ownable, ReentrancyGuard {
     function getCurrentAPY(address asset) external view override returns (uint256) {
         require(supportedAssets[asset], "Asset not supported");
         
-        (,,uint128 currentLiquidityRate,,,,,,,,,,,,) = aavePool.getReserveData(asset);
+        // Aave V3 getReserveData returns a struct, we only need currentLiquidityRate
+        // which is at index 2 (after configuration and liquidityIndex)
+        (uint256 configuration, uint128 liquidityIndex, uint128 currentLiquidityRate, , , , , , , , , , , , ) = aavePool.getReserveData(asset);
+        
+        // Silence unused variable warnings
+        configuration;
+        liquidityIndex;
         
         // Aave returns rate in RAY (27 decimals), convert to basis points
         // APY = (1 + rate/secondsPerYear)^secondsPerYear - 1

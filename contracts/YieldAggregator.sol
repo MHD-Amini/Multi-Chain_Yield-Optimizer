@@ -177,6 +177,15 @@ contract YieldAggregator is Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice Update fee recipient
+     * @param _feeRecipient New fee recipient address
+     */
+    function setFeeRecipient(address _feeRecipient) external onlyOwner {
+        require(_feeRecipient != address(0), "Invalid fee recipient");
+        feeRecipient = _feeRecipient;
+    }
+
+    /**
      * @notice Update strategy for an asset
      * @param asset The asset address
      * @param autoRebalance Whether to auto-rebalance
@@ -215,7 +224,8 @@ contract YieldAggregator is Ownable, ReentrancyGuard, Pausable {
         
         // Deposit to protocol
         address adapter = protocols[bestProtocol].adapter;
-        IERC20(asset).approve(adapter, amount);
+        // Reset approval first for tokens like USDT that require it
+        IERC20(asset).forceApprove(adapter, amount);
         uint256 shares = IYieldProtocol(adapter).deposit(asset, amount);
         
         // Update user position
@@ -307,7 +317,8 @@ contract YieldAggregator is Ownable, ReentrancyGuard, Pausable {
         
         // Deposit to new protocol
         address newAdapter = protocols[bestProtocol].adapter;
-        IERC20(asset).approve(newAdapter, received);
+        // Reset approval first for tokens like USDT that require it
+        IERC20(asset).forceApprove(newAdapter, received);
         uint256 newShares = IYieldProtocol(newAdapter).deposit(asset, received);
         
         // Update position
@@ -440,8 +451,8 @@ contract YieldAggregator is Ownable, ReentrancyGuard, Pausable {
     // ============ Internal Functions ============
 
     function _getTotalShares(address adapter, address asset) internal view returns (uint256) {
-        // Simplified: return adapter's total balance
-        return IYieldProtocol(adapter).getBalance(asset, address(0));
+        // Return adapter's total balance for this contract
+        return IYieldProtocol(adapter).getBalance(asset, address(this));
     }
 
     // ============ Pause Functions ============
